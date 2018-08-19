@@ -2,6 +2,7 @@ import json
 import sys
 from math import sin, cos, sqrt, atan2, radians
 
+
 def get_distance(lon1, lat1, lon2, lat2):
     r = 6373.0
 
@@ -20,6 +21,7 @@ def get_distance(lon1, lat1, lon2, lat2):
 
     return distance
 
+
 def print_bar_data(data):
     print(result['Name'])
     print(result['AdmArea'])
@@ -28,6 +30,7 @@ def print_bar_data(data):
     print(result['PublicPhone'][0]['PublicPhone'])
     print(result['SeatsCount'])
 
+
 def compare_data(data1, data2, type):
     if type == '<' and data1 < data2:
         return True
@@ -35,6 +38,7 @@ def compare_data(data1, data2, type):
         return True
 
     return False
+
 
 def iter_bars_data(data, compare_type):
     seats_count = data[0]['attributes']['SeatsCount']
@@ -47,6 +51,7 @@ def iter_bars_data(data, compare_type):
             bar_data = item['attributes']
 
     return bar_data
+
 
 def load_data(filepath):
     data = []
@@ -68,22 +73,27 @@ def load_data(filepath):
 def get_biggest_bar(data):
     return iter_bars_data(data, '>')
 
+
 def get_smallest_bar(data):
     return iter_bars_data(data, '<')
+
 
 def get_closest_bar(data, longitude, latitude):
     closest_destination = None
     closest_bar_data = []
 
     for item in data:
-        distance_value = get_distance(longitude, latitude, item['coordinates'][1], item['coordinates'][0])
+        distance_value = get_distance(
+            longitude, latitude,
+            item['coordinates'][1], item['coordinates'][0])
 
-        if closest_destination is None or \
-            compare_data(distance_value, closest_destination, '<'):
+        if closest_destination is None or
+        compare_data(distance_value, closest_destination, '<'):
             closest_destination = distance_value
             closest_bar_data = item['attributes']
 
     return closest_bar_data
+
 
 if __name__ == '__main__':
     filepath = 'bars.json'
