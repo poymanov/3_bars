@@ -31,87 +31,66 @@ def print_bar_data(bar):
     print(bar['SeatsCount'])
 
 
-def compare_data(compare_value_1, compare_value_2, compare_type):
-    if compare_type == '<' and compare_value_1 < compare_value_2:
-        return True
-    elif compare_type == '>' and compare_value_1 > compare_value_2:
-        return True
-
-    return False
-
-
-def iter_bars_data(bars_data, compare_type):
-    seats_count = bars_data[0]['attributes']['SeatsCount']
-    bar_data = []
-
-    for bar in bars_data:
-        bar_seats_count = bar['attributes']['SeatsCount']
-        if compare_data(bar_seats_count, seats_count, compare_type):
-            seats_count = bar_seats_count
-            bar_data = bar['attributes']
-
-    return bar_data
-
-
 def load_data(filepath):
     bars_data = []
+    seats_count_data = []
+    coordinates_data = []
 
     with open(filepath) as file:
         content = file.read()
 
     json_data = json.loads(content)
     for bar in json_data['features']:
-        bar_data = {
-            'coordinates': bar['geometry']['coordinates'],
-            'attributes': bar['properties']['Attributes']
-        }
-        bars_data.append(bar_data)
+        bars_data.append(bar['properties']['Attributes'])
+        coordinates_data.append(bar['geometry']['coordinates'])
+        seats_count_data.append(bar['properties']['Attributes']['SeatsCount'])
 
-    return bars_data
-
-
-def get_biggest_bar(bars_data):
-    return iter_bars_data(bars_data, '>')
+    return {
+        'bars_data': bars_data,
+        'seats_count_data': seats_count_data,
+        'coordinates_data': coordinates_data}
 
 
-def get_smallest_bar(bars_data):
-    return iter_bars_data(bars_data, '<')
+def get_biggest_bar(seats_count_data):
+    biggest_bar_value = max(seats_count_data)
+    return seats_count_data.index(biggest_bar_value)
 
 
-def get_closest_bar(bars_data, longitude, latitude):
-    closest_destination = None
-    closest_bar_data = []
+def get_smallest_bar(seats_count_data):
+    smallest_bar_value = min(seats_count_data)
+    return seats_count_data.index(smallest_bar_value)
 
-    for bar in bars_data:
-        distance_value = get_distance(
-            longitude, latitude,
-            bar['coordinates'][1], bar['coordinates'][0])
 
-        if closest_destination is None or \
-           compare_data(distance_value, closest_destination, '<'):
-            closest_destination = distance_value
-            closest_bar_data = bar['attributes']
+def get_closest_bar(coordinates_data, longitude, latitude):
+    distances_data = []
 
-    return closest_bar_data
+    for coordinates in coordinates_data:
+        distance_value = get_distance(longitude, latitude,
+                                      coordinates[1], coordinates[0])
+        distances_data.append(distance_value)
+
+    closest_distance_value = min(distances_data)
+    return distances_data.index(closest_distance_value)
 
 
 if __name__ == '__main__':
     filepath = 'bars.json'
-    bars_data = load_data(filepath)
+    file_data = load_data(filepath)
 
     argv = sys.argv
 
     if 'min' in argv:
-        result = get_smallest_bar(bars_data)
+        bar_index = get_smallest_bar(file_data['seats_count_data'])
         print('Bar with a minimum number of seats is:')
     elif 'max' in argv:
-        result = get_biggest_bar(bars_data)
+        bar_index = get_biggest_bar(file_data['seats_count_data'])
         print('Bar with a maximum number of seats is:')
     else:
         longitude = float(input('Enter your longitude: '))
         latitude = float(input('Enter your latitude: '))
 
-        result = get_closest_bar(bars_data, longitude, latitude)
+        bar_index = get_closest_bar(file_data['coordinates_data'],
+                                    longitude, latitude)
         print('The closest bar is:')
 
-    print_bar_data(result)
+    print_bar_data(file_data['bars_data'][bar_index])
