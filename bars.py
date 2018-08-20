@@ -3,8 +3,18 @@ import sys
 from math import sin, cos, sqrt, atan2, radians
 
 
-def check_coords(latitude, longitude):
-    return 49.7 < latitude < 58.5 and -6 < longitude < 2.1
+def get_coordinates():
+    longitude = input('Enter your longitude: ')
+    latitude = input('Enter your latitude: ')
+
+    try:
+        longitude = float(longitude)
+        latitude = float(latitude)
+
+        return [longitude, latitude]
+    except ValueError:
+        print('You have entered incorrect coordinates')
+        exit()
 
 
 def get_distance(lon1, lat1, lon2, lat2):
@@ -95,16 +105,7 @@ if __name__ == '__main__':
         bar_index = get_biggest_bar(file_data['seats_count_data'])
         print('Bar with a maximum number of seats is:')
     else:
-        longitude = input('Enter your longitude: ')
-        latitude = input('Enter your latitude: ')
-
-        try:
-            longitude = float(longitude)
-            latitude = float(latitude)
-        except Exception:
-            print('You have entered incorrect coordinates')
-            exit()
-
+        longitude, latitude = get_coordinates()
         bar_index = get_closest_bar(file_data['coordinates_data'],
                                     longitude, latitude)
         print('The closest bar is:')
