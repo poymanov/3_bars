@@ -13,8 +13,7 @@ def get_coordinates():
 
         return [longitude, latitude]
     except ValueError:
-        print('You have entered incorrect coordinates')
-        exit()
+        return None
 
 
 def get_distance(lon1, lat1, lon2, lat2):
@@ -105,7 +104,13 @@ if __name__ == '__main__':
         bar_index = get_biggest_bar(file_data['seats_count_data'])
         print('Bar with a maximum number of seats is:')
     else:
-        longitude, latitude = get_coordinates()
+        coordinates = get_coordinates()
+
+        if coordinates is None:
+            print('You have entered incorrect coordinates')
+            exit()
+
+        longitude, latitude = coordinates
         bar_index = get_closest_bar(file_data['coordinates_data'],
                                     longitude, latitude)
         print('The closest bar is:')
