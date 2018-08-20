@@ -3,8 +3,12 @@ import sys
 from math import sin, cos, sqrt, atan2, radians
 
 
+def check_coords(latitude, longitude):
+    return 49.7 < latitude < 58.5 and -6 < longitude < 2.1
+
+
 def get_distance(lon1, lat1, lon2, lat2):
-    radius = 6373.0
+    earth_radius = 6373.0
 
     lat1 = radians(lat1)
     lon1 = radians(lon1)
@@ -17,18 +21,19 @@ def get_distance(lon1, lat1, lon2, lat2):
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
-    distance = radius * c
+    coordinates_distance = earth_radius * c
 
-    return distance
+    return coordinates_distance
 
 
 def print_bar_data(bar):
-    print(bar['Name'])
-    print(bar['AdmArea'])
-    print(bar['District'])
-    print(bar['Address'])
-    print(bar['PublicPhone'][0]['PublicPhone'])
-    print(bar['SeatsCount'])
+    bar_attributes = bar['properties']['Attributes']
+    print(bar_attributes['Name'])
+    print(bar_attributes['AdmArea'])
+    print(bar_attributes['District'])
+    print(bar_attributes['Address'])
+    print(bar_attributes['PublicPhone'][0]['PublicPhone'])
+    print(bar_attributes['SeatsCount'])
 
 
 def load_data(filepath):
@@ -39,9 +44,9 @@ def load_data(filepath):
     with open(filepath) as file:
         content = file.read()
 
-    json_data = json.loads(content)
-    for bar in json_data['features']:
-        bars_data.append(bar['properties']['Attributes'])
+    file_data = json.loads(content)
+    for bar in file_data['features']:
+        bars_data.append(bar)
         coordinates_data.append(bar['geometry']['coordinates'])
         seats_count_data.append(bar['properties']['Attributes']['SeatsCount'])
 
@@ -79,6 +84,10 @@ if __name__ == '__main__':
 
     argv = sys.argv
 
+    for bar_index in range(len(file_data['bars_data'])):
+        print_bar_data(file_data['bars_data'][bar_index])
+        print('\n')
+
     if 'min' in argv:
         bar_index = get_smallest_bar(file_data['seats_count_data'])
         print('Bar with a minimum number of seats is:')
@@ -86,8 +95,15 @@ if __name__ == '__main__':
         bar_index = get_biggest_bar(file_data['seats_count_data'])
         print('Bar with a maximum number of seats is:')
     else:
-        longitude = float(input('Enter your longitude: '))
-        latitude = float(input('Enter your latitude: '))
+        longitude = input('Enter your longitude: ')
+        latitude = input('Enter your latitude: ')
+
+        try:
+            longitude = float(longitude)
+            latitude = float(latitude)
+        except Exception:
+            print('You have entered incorrect coordinates')
+            exit()
 
         bar_index = get_closest_bar(file_data['coordinates_data'],
                                     longitude, latitude)
