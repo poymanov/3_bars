@@ -4,9 +4,12 @@ from math import sin, cos, sqrt, atan2, radians
 
 
 def get_coordinates():
-    longitude = float(input('Enter your longitude: '))
-    latitude = float(input('Enter your latitude: '))
-    return longitude, latitude
+    try:
+        longitude = float(input('Enter your longitude: '))
+        latitude = float(input('Enter your latitude: '))
+        return longitude, latitude
+    except ValueError:
+        return 'You have entered incorrect coordinates'
 
 
 def get_distance(lon1, lat1, lon2, lat2):
@@ -54,11 +57,9 @@ def get_smallest_bar(bars_data):
 
 
 def get_closest_bar(bars_data, longitude, latitude):
-    return min(bars_data['features'],
-               key=(lambda k:
-                    get_distance(
-                        longitude, latitude, k['geometry']['coordinates'][1],
-                        k['geometry']['coordinates'][0])))
+    return min(bars_data['features'], key=(lambda k: get_distance(longitude,
+               latitude, k['geometry']['coordinates'][1],
+               k['geometry']['coordinates'][0])))
 
 
 if __name__ == '__main__':
@@ -77,13 +78,13 @@ if __name__ == '__main__':
         bar = get_biggest_bar(file_data)
         bar_description = 'Bar with a maximum number of seats is:'
     else:
-        try:
-            longitude, latitude = get_coordinates()
-
+        coordinates = get_coordinates()
+        if isinstance(coordinates, tuple):
+            longitude, latitude = coordinates
             bar = get_closest_bar(file_data, longitude, latitude)
             bar_description = 'The closest bar is:'
-        except ValueError:
-            sys.exit('You have entered incorrect coordinates')
+        else:
+            sys.exit(coordinates)
 
     print(bar_description, '\n')
     print_bar_data(bar)
