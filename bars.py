@@ -3,6 +3,12 @@ import sys
 from math import sin, cos, sqrt, atan2, radians
 
 
+def get_coordinates():
+    longitude = float(input('Enter your longitude: '))
+    latitude = float(input('Enter your latitude: '))
+    return longitude, latitude
+
+
 def get_distance(lon1, lat1, lon2, lat2):
     earth_radius = 6373.0
 
@@ -72,8 +78,7 @@ if __name__ == '__main__':
         bar_description = 'Bar with a maximum number of seats is:'
     else:
         try:
-            longitude = float(input('Enter your longitude: '))
-            latitude = float(input('Enter your latitude: '))
+            longitude, latitude = get_coordinates()
 
             bar = get_closest_bar(file_data, longitude, latitude)
             bar_description = 'The closest bar is:'
