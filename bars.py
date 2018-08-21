@@ -4,12 +4,12 @@ import argparse
 from math import sin, cos, sqrt, atan2, radians
 
 
-def get_bar_info(mode):
-    if args.mode == 'min':
+def get_bar_data(mode, bars_list):
+    if mode == 'min':
         return get_smallest_bar(bars_list)
-    elif args.mode == 'max':
+    elif mode == 'max':
         return get_biggest_bar(bars_list)
-    elif args.mode == 'closest':
+    elif mode == 'closest':
         longitude, latitude = get_coordinates()
 
         if longitude and latitude:
@@ -78,8 +78,8 @@ def load_data(filepath):
         with open(filepath) as file:
             content = file.read()
 
-        file_data = json.loads(content)
-        return file_data['features']
+        bars_data = json.loads(content)
+        return bars_data['features']
     except (FileNotFoundError, json.decoder.JSONDecodeError, TypeError):
         return None
 
@@ -114,12 +114,13 @@ if __name__ == '__main__':
     if bars_list is None:
         sys.exit('Failed to open json file (not found or incorrect format)')
 
-    output_data = get_bar_info(args.mode)
+    bar_data = get_bar_data(args.mode, bars_list)
 
-    if output_data is None:
+    if bar_data is None:
         if args.mode == 'closest':
             sys.exit('You have entered incorrect coordinates')
         sys.exit('Failed to get bar information')
 
-    print(output_data[1], '\n')
-    print_bar_data(output_data[0])
+    bar, description = bar_data
+    print(description, '\n')
+    print_bar_data(bar)
