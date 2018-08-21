@@ -4,6 +4,20 @@ import argparse
 from math import sin, cos, sqrt, atan2, radians
 
 
+def get_bar_info(mode):
+    if args.mode == 'min':
+        return get_smallest_bar(bars_list)
+    elif args.mode == 'max':
+        return get_biggest_bar(bars_list)
+    elif args.mode == 'closest':
+        longitude, latitude = get_coordinates()
+
+        if longitude and latitude:
+            return get_closest_bar(bars_list, longitude, latitude)
+        else:
+            return None
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('file', help='Path to file with json data')
@@ -100,17 +114,12 @@ if __name__ == '__main__':
     if bars_list is None:
         sys.exit('Failed to open json file (not found or incorrect format)')
 
-    if args.mode == 'min':
-        output_data = get_smallest_bar(bars_list)
-    elif args.mode == 'max':
-        output_data = get_biggest_bar(bars_list)
-    elif args.mode == 'closest':
-        longitude, latitude = get_coordinates()
+    output_data = get_bar_info(args.mode)
 
-        if longitude and latitude:
-            output_data = get_closest_bar(bars_list, longitude, latitude)
-        else:
+    if output_data is None:
+        if args.mode == 'closest':
             sys.exit('You have entered incorrect coordinates')
+        sys.exit('Failed to get bar information')
 
     print(output_data[1], '\n')
     print_bar_data(output_data[0])
