@@ -1,6 +1,27 @@
 import json
 import sys
+import argparse
 from math import sin, cos, sqrt, atan2, radians
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file', help='Path to file with json data')
+    parser.add_argument('mode', help='Output data result',
+                        choices=['min', 'max', 'closest'])
+    return parser.parse_args()
+
+
+def get_bars_list(bars_data):
+    return bars_data['features']
+
+
+def get_bar_seats_count(bar):
+    return bar['properties']['Attributes']['SeatsCount']
+
+
+def get_bar_coordinates(bar):
+    return bar['geometry']['coordinates'][1], bar['geometry']['coordinates'][0]
 
 
 def get_coordinates():
@@ -9,11 +30,14 @@ def get_coordinates():
         latitude = float(input('Enter your latitude: '))
         return longitude, latitude
     except ValueError:
-        return 'You have entered incorrect coordinates'
+        return None, None
 
 
-def get_distance(lon1, lat1, lon2, lat2):
+def get_distance(origin, destination):
     earth_radius = 6373.0
+
+    lon1, lat1 = origin
+    lon2, lat2 = destination
 
     lat1 = radians(lat1)
     lon1 = radians(lon1)
@@ -47,44 +71,47 @@ def load_data(filepath):
 
 
 def get_biggest_bar(bars_data):
-    return max(bars_data['features'],
-               key=(lambda k: k['properties']['Attributes']['SeatsCount']))
+    bars_list = get_bars_list(bars_data)
+    bar = max(bars_list, key=(lambda bar: get_bar_seats_count(bar)))
+    description = 'Bar with a maximum number of seats is:'
+    return bar, description
 
 
 def get_smallest_bar(bars_data):
-    return min(bars_data['features'],
-               key=(lambda k: k['properties']['Attributes']['SeatsCount']))
+    bars_list = get_bars_list(bars_data)
+    bar = min(bars_list, key=(lambda bar: get_bar_seats_count(bar)))
+    description = 'Bar with a minimum number of seats is:'
+    return bar, description
 
 
 def get_closest_bar(bars_data, longitude, latitude):
-    return min(bars_data['features'], key=(lambda k: get_distance(longitude,
-               latitude, k['geometry']['coordinates'][1],
-               k['geometry']['coordinates'][0])))
+    bars_list = get_bars_list(bars_data)
+
+    origin_coordinates = longitude, latitude
+
+    bar = min(bars_list, key=lambda bar:
+              get_distance(origin_coordinates, get_bar_coordinates(bar)))
+    description = 'The closest bar is:'
+    return bar, description
 
 
 if __name__ == '__main__':
-    argv = sys.argv
+    args = parse_args()
 
-    if not any('.json' in arg for arg in argv):
-        sys.exit('You did not specify the path to the data file')
-
-    filepath = 'bars.json'
+    filepath = args.file
     file_data = load_data(filepath)
 
-    if 'min' in argv:
-        bar = get_smallest_bar(file_data)
-        bar_description = 'Bar with a minimum number of seats is:'
-    elif 'max' in argv:
-        bar = get_biggest_bar(file_data)
-        bar_description = 'Bar with a maximum number of seats is:'
-    else:
-        coordinates = get_coordinates()
-        if isinstance(coordinates, tuple):
-            longitude, latitude = coordinates
-            bar = get_closest_bar(file_data, longitude, latitude)
-            bar_description = 'The closest bar is:'
-        else:
-            sys.exit(coordinates)
+    if args.mode == 'min':
+        output_data = get_smallest_bar(file_data)
+    elif args.mode == 'max':
+        output_data = get_biggest_bar(file_data)
+    elif args.mode == 'closest':
+        longitude, latitude = get_coordinates()
 
-    print(bar_description, '\n')
-    print_bar_data(bar)
+        if None not in (longitude, latitude):
+            output_data = get_closest_bar(file_data, longitude, latitude)
+        else:
+            sys.exit('You have entered incorrect coordinates')
+
+    print(output_data[1], '\n')
+    print_bar_data(output_data[0])
