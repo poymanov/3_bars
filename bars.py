@@ -12,10 +12,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_bars_list(bars_data):
-    return bars_data['features']
-
-
 def get_bar_seats_count(bar):
     return bar['properties']['Attributes']['SeatsCount']
 
@@ -64,29 +60,29 @@ def print_bar_data(bar):
 
 
 def load_data(filepath):
-    with open(filepath) as file:
-        content = file.read()
+    try:
+        with open(filepath) as file:
+            content = file.read()
 
-    return json.loads(content)
+        file_data = json.loads(content)
+        return file_data['features']
+    except (FileNotFoundError, json.decoder.JSONDecodeError, TypeError):
+        return None
 
 
-def get_biggest_bar(bars_data):
-    bars_list = get_bars_list(bars_data)
-    bar = max(bars_list, key=(lambda bar: get_bar_seats_count(bar)))
+def get_biggest_bar(bars_list):
+    bar = max(bars_list, key=get_bar_seats_count)
     description = 'Bar with a maximum number of seats is:'
     return bar, description
 
 
-def get_smallest_bar(bars_data):
-    bars_list = get_bars_list(bars_data)
-    bar = min(bars_list, key=(lambda bar: get_bar_seats_count(bar)))
+def get_smallest_bar(bars_list):
+    bar = min(bars_list, key=get_bar_seats_count)
     description = 'Bar with a minimum number of seats is:'
     return bar, description
 
 
-def get_closest_bar(bars_data, longitude, latitude):
-    bars_list = get_bars_list(bars_data)
-
+def get_closest_bar(bars_list, longitude, latitude):
     origin_coordinates = longitude, latitude
 
     bar = min(bars_list, key=lambda bar:
@@ -99,17 +95,20 @@ if __name__ == '__main__':
     args = parse_args()
 
     filepath = args.file
-    file_data = load_data(filepath)
+    bars_list = load_data(filepath)
+
+    if bars_list is None:
+        sys.exit('Failed to open json file (not found or incorrect format)')
 
     if args.mode == 'min':
-        output_data = get_smallest_bar(file_data)
+        output_data = get_smallest_bar(bars_list)
     elif args.mode == 'max':
-        output_data = get_biggest_bar(file_data)
+        output_data = get_biggest_bar(bars_list)
     elif args.mode == 'closest':
         longitude, latitude = get_coordinates()
 
-        if None not in (longitude, latitude):
-            output_data = get_closest_bar(file_data, longitude, latitude)
+        if longitude and latitude:
+            output_data = get_closest_bar(bars_list, longitude, latitude)
         else:
             sys.exit('You have entered incorrect coordinates')
 
